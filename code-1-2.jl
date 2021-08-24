@@ -35,12 +35,67 @@ function states(model::Environment)
             end
         end
     end
-    states
+    return states
 end
 
-env = Environment([[1, 2, 3, 4], [4, 5, 6, 7]], 1, 1, 1)
+function transit_func(model::Environment, state, action)
+    transition_probs = Dict()
+
+    if ! can_action_at(env, state)
+        return transition_probs
+    end
+
+    if action == UP::Action
+        opposite_direction = DOWN::Action
+    elseif action == DOWN::Action
+        opposite_direction = UP::Action
+    elseif action == LEFT::Action
+        opposite_direction = RIGHT::Action
+    elseif action == RIGHT::Action
+        opposite_direction = LEFT::Action
+    end
+
+    for a in actions(env)
+        prob = 0
+        if a == action
+            prob = env.move_prob
+        elseif a != opposite_direction
+            prob = (1 - env.move_prob) / 2
+        end
+
+        next_state = _move(env, state, a)
+        println(transition_probs)
+        if ! haskey(transition_probs, next_state)
+            transition_probs[next_state] = prob
+        else
+            transition_probs[next_state] += prob
+        end
+    end
+    return transition_probs
+end
+
+function can_action_at(env, state)
+    if env.grid[state.row][state.column] == 0
+        true
+    else
+        false
+    end
+end
+
+function _move(env, state, action)
+
+    if ! can_action_at(env, state)
+        println("Can't move from here")
+    end
+
+    next_state = clone(state)
+    next_state
+end
+
+env = Environment([[0, 0, 0, 0], [0, 0, 0, 0]], 1, 1, 1)
 reset(env)
 
 a = actions(env)
 println(a[1])
 println(states(env))
+transit_func(env, State(1, 1), RIGHT::Action)
