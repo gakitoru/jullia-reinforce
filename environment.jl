@@ -75,7 +75,7 @@ function transit_func(env::Environment, state, action)
         end
 
         next_state = _move(env, state, a)
-        println(transition_probs)
+        #println(transition_probs)
         if ! haskey(transition_probs, next_state)
             transition_probs[next_state] = prob
         else
@@ -166,9 +166,9 @@ function transit(env::Environment, state, action)
 
     next_states = []
     probs = []
-    println(transition_probs)
+    #println(transition_probs)
     for (s, v) in transition_probs
-        println(s)
+        #println(s)
         push!(next_states, s)
         push!(probs, v)
     end
