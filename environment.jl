@@ -21,10 +21,6 @@ mutable struct Environment
     end
 end
 
-function reset(env::Environment)
-    
-end
-
 function row_length(env::Environment)
     size(env.grid)[1]
 end
