@@ -1,5 +1,6 @@
 include("../environment.jl")
 using ResumableFunctions
+using Plots
 
 abstract type Planner 
 end
@@ -22,7 +23,8 @@ end
 function transitions_at(self::Planner, state, action)
     transition_probs = transit_func(self.planner.env, state, action)
     ret = []
-    for (next_state, prob) in transition_probs
+    for next_state in keys(transition_probs)
+        prob = transition_probs[next_state]
         reward, _ = reward_func(self.planner.env, next_state)
         push!(ret, (prob, next_state, reward))
     end
@@ -51,18 +53,13 @@ end
 
 # cannot use override
 function plan(self::ValueIterationPlanner, gamma=0.9, threshold=0.0001)
-    println("call plan")
     initialize(self)
-    #actions = actions(self.planner.env)
-    #Val = Dict{State, Float64}()
-    Val = Dict()
+    Val = Dict{State, Float64}()
     for s in states(self.planner.env)
-        # initialize each state's expected reward.
+        #initialize each state's expected reward.
         Val[s] = 0.0
-        #println(s)
     end
-    #println(Val)
-    while 1==1
+    while true
         delta = 0.0
         push!(self.planner.log, dict_to_grid(self, Val))
         for (s, _) in Val
@@ -73,26 +70,13 @@ function plan(self::ValueIterationPlanner, gamma=0.9, threshold=0.0001)
             for a in actions(self.planner.env)
                 r = 0.0
                 ret = transitions_at(self, s, a)
-                probs = []
-                next_states = []
-                rewards = []
                 for (prob, next_state, reward) in ret
-                    push!(probs, prob)
-                    push!(next_states, next_state)
-                    push!(rewards, reward)
-                end
-                for (key, _) in Val
-                    println("key:", key)
-                    for (prob, next_state, reward) in zip(probs, next_states, rewards)
-                        println("next_state:", next_state)
-                        if key == next_state
+                    for key in keys(Val)
+                        if key.column == next_state.column && key.row == next_state.row
                             r += prob * (reward + gamma * Val[key])
-                            println("hit:", key)
                         end
                     end
                 end
-                println("")
-                #println(r)
                 push!(expected_rewards, r)
             end
             max_reward = maximum(expected_rewards)
@@ -116,11 +100,7 @@ grid = [
 env = Environment(grid)
 pl = ValueIterationPlanner(env)
 ret = plan(pl)
-println(ret)
-println(typeof(ret))
 A = [ret[x][y] for x in 1:1:3, y in 1:1:4]
-println(A)
-using Plots
 heatmap(A)
 savefig("out")
 
