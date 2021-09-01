@@ -14,11 +14,10 @@ mutable struct Planner_values
     end
 end
 
-function initialize(self::Planner)
-    reset(self.planner.env)
-    self.planner.log = []
+function initialize(self::Planner_values)
+    reset(self.env)
+    self.log = []
 end
-
 
 function transitions_at(self::Planner, state, action)
     transition_probs = transit_func(self.planner.env, state, action)
@@ -53,7 +52,7 @@ end
 
 # cannot use override
 function plan(self::ValueIterationPlanner, gamma=0.9, threshold=0.0001)
-    initialize(self)
+    initialize(self.planner)
     Val = Dict{State, Float64}()
     for s in states(self.planner.env)
         #initialize each state's expected reward.
@@ -91,6 +90,30 @@ function plan(self::ValueIterationPlanner, gamma=0.9, threshold=0.0001)
     return V_grid
 end
 
+mutable struct PolicyIterationPlanner <: Planner
+    planner::Planner_values
+    policy
+    function PolicyIterationPlanner(env)
+        policy = Dict()
+        new(Planner_values(env), policy)
+    end
+end
+
+function initialize(self::PolicyIterationPlanner)
+    initialize(self.planner)
+    self.policy = Dict()
+    println(self.planner.env)
+    acts = actions(self.planner.env)
+    stats = states(self.planner.env)
+    for s in stats
+        self.policy[s] = Dict()
+        for a in acts
+            self.policy[s][a] = 1 / length(acts)
+        end
+    end
+    println(self.policy)
+end
+
 grid = [
     [0, 0, 0, 1],
     [0, 9, 0, -1],
@@ -98,11 +121,13 @@ grid = [
 ]
 
 env = Environment(grid)
-pl = ValueIterationPlanner(env)
-ret = plan(pl)
-A = [ret[x][y] for x in 1:1:3, y in 1:1:4]
-heatmap(A)
-savefig("out")
+# pl = ValueIterationPlanner(env)
+# ret = plan(pl)
+# A = [ret[x][y] for x in 1:1:3, y in 1:1:4]
+# heatmap(A)
+# savefig("out")
+pl = PolicyIterationPlanner(env)
+initialize(pl)
 
 # for (prob, next_state, reward) in transitions_at(pl, State(1, 1), LEFT::Action)
 #     println(prob)
