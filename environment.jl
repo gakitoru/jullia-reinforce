@@ -3,6 +3,9 @@ using StatsBase
 mutable struct State
     row
     column
+    function State(row, column)
+        new(row, column)
+    end
 end
 
 function clone(model::State)
