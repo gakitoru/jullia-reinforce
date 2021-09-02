@@ -102,7 +102,7 @@ end
 function initialize(self::PolicyIterationPlanner)
     initialize(self.planner)
     self.policy = Dict()
-    println(self.planner.env)
+    #println(self.planner.env)
     acts = actions(self.planner.env)
     stats = states(self.planner.env)
     for s in stats
@@ -111,8 +111,107 @@ function initialize(self::PolicyIterationPlanner)
             self.policy[s][a] = 1 / length(acts)
         end
     end
-    println(self.policy)
+    #println(self.policy)
 end
+
+function estimate_by_policy(self::PolicyIterationPlanner, gamma, threshold)
+    V = Dict()
+    for s in states(self.planner.env)
+        V[s] = 0
+    end
+
+    while true
+        delta = 0
+        for s in keys(V)
+            expected_rewards = []
+            #println(self.policy)
+            pol_key = nothing
+            for k in keys(self.policy)
+                if k.column == s.column && k.row == s.row
+                    pol_key = k
+                end
+            end
+            for a in keys(self.policy[pol_key])
+                action_prob = self.policy[pol_key][a]
+                r = 0
+                for (prob, next_state, reward) in transitions_at(self, s, a)
+                    for key in keys(V)
+                        if key.column == next_state.column && key.row == next_state.row
+                            r += action_prob * prob * (reward + gamma * V[key])
+                        end
+                    end
+                end
+                push!(expected_rewards, r)
+            end
+            max_reward = maximum(expected_rewards)
+            delta = delta > abs(max_reward - V[s]) ? delta : abs(max_reward - V[s])
+            V[s] = max_reward
+        end
+        if delta < threshold
+            break
+        end
+    end
+    return V
+end
+
+function plan(self::PolicyIterationPlanner, gamma=0.9, threshold=0.0001)
+    initialize(self)
+    stats = states(self.planner.env)
+    acts = actions(self.planner.env)
+    V = Dict()
+    function take_max_action(action_value_dict)
+        return reduce((x, y) -> action_value_dict[x] >= action_value_dict[y] ? x : y, keys(action_value_dict))
+    end
+    while true
+        update_stable = true
+        # Estimate expected rewards under current policy
+        V = estimate_by_policy(self, gamma, threshold)
+        push!(self.planner.log, V)
+
+        for s in stats
+            # Get an action following to the current policy
+            pol_key = nothing
+            for k in keys(self.policy)
+                if k.column == s.column && k.row == s.row
+                    pol_key = k
+                end
+            end
+            policy_action = take_max_action(self.policy[pol_key])
+
+            # compare with other actions
+            action_rewards = Dict()
+            for a in acts
+                r = 0
+                for (prob, next_state, reward) in transitions_at(self, s, a)
+                    for key in keys(V)
+                        if key.column == next_state.column && key.row == next_state.row
+                            r += prob * (reward + gamma * V[key])
+                        end
+                    end
+                end
+                action_rewards[a] = r
+            end
+            best_action = take_max_action(action_rewards)
+            if policy_action != best_action
+                update_stable = false
+            end
+
+            # Update policy (set best_action prob=1, otherwise=0 (greedy)).
+            for a in keys(self.policy[pol_key])
+                prob = a == best_action ? 1 : 0
+                self.policy[pol_key][a] = prob
+            end
+        end
+        if update_stable
+            break
+        end
+    end
+
+    V_grid = dict_to_grid(self, V)
+    return V_grid
+end
+
+
 
 grid = [
     [0, 0, 0, 1],
@@ -127,7 +226,11 @@ env = Environment(grid)
 # heatmap(A)
 # savefig("out")
 pl = PolicyIterationPlanner(env)
-initialize(pl)
+ret = plan(pl)
+A = [ret[x][y] for x in 1:1:3, y in 1:1:4]
+heatmap(A)
+savefig("out")
+
 
 # for (prob, next_state, reward) in transitions_at(pl, State(1, 1), LEFT::Action)
 #     println(prob)
