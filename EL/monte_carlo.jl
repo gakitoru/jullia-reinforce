@@ -1,4 +1,5 @@
 include("frozen_lake_util.jl")
+#ENV["DISPLAY"]="xxx.xxx.xxx.xxx:0"
 using DataStructures
 
 mutable struct MonteCarloAgent <: ELAgent
@@ -16,5 +17,22 @@ function learn(self::MonteCarloAgent, env, episode_count=1000, gamma=0.9,
     self.el_agent.Q = DefaultDict(zeros(length(actions)))
     N = DefaultDict(zeros(length(actions)))
     ## continue
+
+    for e = 1:episode_count
+        s = env.gymenv.reset()
+        done = false
+        # 1. Play until the end of episode.
+        experience = []
+        while ! done
+            if render
+                env.gymenv.render()
+            end
+            a = policy(self.el_agent, s, actions)
+            n_state, reward, done, info = env.gymenv.step(a)
+            push!(experience, Dict("state" => s, "action" => a, "reward" => reward))
+            s = n_state
+        else
+            log(self.el_agent, reward)
+        end
 end
     
