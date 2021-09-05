@@ -37,9 +37,9 @@ function show_q_value(Q)
     savefig("out")
 end
 
-Q = Dict()
-for i = 1:16
-    Q[i] = ones(4)
-end
-println(Q)
-show_q_value(Q)
+# Q = Dict()
+# for i = 1:16
+#     Q[i] = ones(4)
+# end
+# println(Q)
+# show_q_value(Q)
