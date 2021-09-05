@@ -55,3 +55,16 @@ function show_reward_log(self::ELAgent, interval=50, episode=-1)
         savefig("rewards")
     end
 end
+
+
+using OpenAIGym
+env = GymEnv(:CartPole, :v0)
+for i ∈ 1:20
+  T = 0
+  R = run_episode(env, RandomPolicy()) do (s, a, r, s′)
+    render(env)
+    T += 1
+  end
+  @info("Episode $i finished after $T steps. Total reward: $R")
+end
+close(env)
