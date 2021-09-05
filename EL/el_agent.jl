@@ -55,22 +55,3 @@ function show_reward_log(self::ELAgent, interval=50, episode=-1)
         savefig("rewards")
     end
 end
-
-
-using OpenAIGym
-using PyCall
-@pyimport gym.envs.registration as r
-@pyimport gym
-@pyimport scipy
-r.register(id="FrozenLakeEasy-v0", entry_point="gym.envs.toy_text:FrozenLakeEnv", kwargs=Dict("is_slippery"=>false))
-env = gym.make("FrozenLakeEasy-v0")
-#env = GymEnv(:FrozenLakeEasy, :v0)
-# for i ∈ 1:20
-#   T = 0
-#   R = run_episode(env, RandomPolicy()) do (s, a, r, s′)
-#     render(env)
-#     T += 1
-#   end
-#   @info("Episode $i finished after $T steps. Total reward: $R")
-# end
-# close(env)
