@@ -18,14 +18,14 @@ function show_q_value(Q)
     for r = 1:nrow
         for c = 1:ncol
             s = 1 + (r - 1) * nrow + (c - 1)
-            println(s)
+            #println(s)
             #state_exist = false
-            println(Q[1][1])
+            #println(Q[1][1])
             #println(reward_map)
             #println(reward_map[7][3])
             _r = 2 + (nrow - r) * state_size
             _c = 2 + (c - 1) * state_size
-            println("reward_map($_r, $(_c))")
+            #println("reward_map($_r, $(_c))")
             reward_map[_r, _c - 1] = Q[s][1]
             reward_map[_r - 1, _c] = Q[s][2]
             reward_map[_r, _c + 1] = Q[s][3]
