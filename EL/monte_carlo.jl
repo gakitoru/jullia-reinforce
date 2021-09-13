@@ -84,7 +84,7 @@ end
 function train()
     agent = MonteCarloAgent(0.1)
     env = GymEnv("FrozenLakeEasy-v1")
-    learn(agent, env, 500)
+    learn(agent, env, 10000)
     show_q_value(agent.el_agent.Q)
     show_reward_log(agent)
 end
